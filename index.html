@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obstacle Challenge</title>
+<style>
+  :root{
+    --cell-size: 44px;
+    --blue: #0d6efd;
+    --border: #2b2b2b;
+    --bg: #f6f8fb;
+    --panel-bg: #ffffff;
+    --revealed-bg: #e9ecef;
+    --highlight-bg: #ffd54f;
+    --text: #0f172a;
+    --muted: #64748b;
+    --danger: #e11d48;
+    --radius: 12px;
+    --shadow: 0 6px 24px rgba(15,23,42,.08);
+  }
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);}
+  header{padding:18px 24px;background:#fff;border-bottom:1px solid #e5e7eb;box-shadow:var(--shadow);}
+  h1{margin:0;font-size:22px;font-weight:800}
+  main{max-width:1000px;margin:26px auto;padding:0 16px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;}
+
+  /* Board */
+  .board{display:grid;grid-template-columns:auto 1fr auto;gap:12px 16px;align-items:center;}
+  .row-label{
+    width:36px;text-align:center;font-weight:700;font-size:16px;
+    border:2px solid var(--blue);border-radius:8px;padding:6px;cursor:pointer;
+    background:#f1f5f9;transition:.2s;
+  }
+  .row-label:hover{background:var(--blue);color:#fff}
+  
+.row-wrapper {
+  margin-left: calc(var(--indent) * (var(--cell-size) + 6px));
+}
+
+  .row{display:flex;}
+  .cell{
+    width:var(--cell-size);height:var(--cell-size);
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;cursor:pointer;background:#fff;
+  }
+  .cell.blue{background:var(--blue);color:#fff}
+  .cell.revealed{background:var(--revealed-bg);color:#111}
+  .cell.highlight{background:var(--highlight-bg);color:#000;font-weight:900;box-shadow:inset 0 0 0 2px #000}
+
+  .reset-btn{
+    padding:8px 16px;border:2px solid #334155;background:#f1f5f9;border-radius:8px;font-weight:700;cursor:pointer;transition:.2s;
+  }
+  .reset-btn:hover{background:#334155;color:#fff}
+
+  /* Popup câu hỏi */
+  #question-screen{display:none;max-width:760px;margin:26px auto;background:#fff;border:1px solid #e5e7eb;padding:32px;border-radius:var(--radius);box-shadow:var(--shadow);}
+  #question-screen.visible{display:block}
+  #question-text{margin:0 0 20px;font-size:32px;font-weight:900;text-align:center;}
+  .timer{text-align:center;font-size:28px;color:var(--danger);margin-bottom:20px;font-weight:800;}
+  .controls{text-align:center}
+  button.secondary{padding:12px 20px;border:2px solid #334155;background:#fff;border-radius:10px;font-weight:800;cursor:pointer;transition:.2s;}
+  button.secondary:hover{background:#334155;color:#fff}
+
+  .note{margin-top:10px;color:var(--muted);font-size:14px;text-align:center;}
+
+  /* Đáp án dọc */
+  #vertical-answer{margin-top:16px;padding:16px;background:#fff;border:2px dashed var(--blue);border-radius:12px;font-size:24px;font-weight:900;text-align:center;display:none;}
+  #show-vertical-btn{margin-top:16px;padding:12px 20px;border:2px solid var(--blue);background:#fff;border-radius:10px;font-weight:800;cursor:pointer;transition:.2s;display:none;}
+  #show-vertical-btn:hover{background:var(--blue);color:#fff}
+  #vertical-grid {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.vertical-cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  background: var(--highlight-bg); /* giống highlight */
+  box-shadow: inset 0 0 0 2px #000;
+}
+</style>
+</head>
+<body>
+<header style="display: flex; justify-content: center;">
+  <h1 style="font-size:36px; color:#053a47;">Obstacle Challenge</h1>
+</header>
+<main>
+<section id="main-screen" class="card">
+  <div class="board" id="board"></div>
+  <button id="show-vertical-btn">Show vertical answer</button>
+  <div id="vertical-grid" style="display:none;"></div>
+</section>
+<section id="question-screen" class="card">
+  <h2 id="question-text">Câu hỏi</h2>
+  <div id="answer-length" style="text-align:center;margin-bottom:20px;font-size:20px;color:#334155;"></div>
+  <div class="timer" id="timer">15</div>
+  <div class="controls"><button id="back-button" class="secondary hidden">Back</button></div>
+</section>
+</main>
+<audio controls id="sound-start" style="display: none;">
+  <source src="./audio2.wav" type="audio/mpeg">
+</audio>
+<audio controls id="sound-horizontal-answer" style="display: none;">
+  <source src="./audio1.wav" type="audio/mpeg">
+</audio>
+<audio controls id="sound-vertical-answer" style="display: none;">
+  <source src="./audio3.wav" type="audio/mpeg">
+</audio>
+<script>
+const data=[
+  {question:"This action moves your code from development to production",answer:"DEPLOY"},
+  {question:"Where do we store data?",answer:"DATABASE"},
+  {question:"One way to prevent being hack",answer:"ENCRYPT"},
+  {question:"One office commonly used for onsite",answer:"SINGAPORE"},
+  {question:"What are Create, Edit, Filter, Search, Sort,....?",answer:"FUNCTION"},
+  {question:"What is 01010100?",answer:"BINARY"},
+  {question:"One tool that is commonly used by QA to test API",answer:"POSTMAN"},
+  {question:"To test an mobile app, what do you need to have?",answer:"PHONE"},
+  {question:"Where do developer code?",answer:"IDE"},
+  {question:"ESMS is a big ...... ?",answer:"PROJECT"},
+];
+const offsets=[2,4,0,0,5,1,1,0,2,1];
+const highlightPositions = [5, 2, 3, 8, 3, 5, 2, 4, 0, 3]; 
+const rowsState=data.map(()=>({selected:false,revealed:false}));
+const board=document.getElementById('board');
+const questionScreen=document.getElementById('question-screen');
+const mainScreen=document.getElementById('main-screen');
+const questionText=document.getElementById('question-text');
+const timerEl=document.getElementById('timer');
+const backBtn=document.getElementById('back-button');
+const verticalAnswerEl=document.getElementById('vertical-answer');
+const showVerticalBtn=document.getElementById('show-vertical-btn');
+let currentIndex=null,timerId=null,DURATION=15;
+
+function playSound(id){
+  const audio=document.getElementById(id);
+  if(audio){audio.currentTime=0;audio.play();}
+}
+
+function buildBoard(){
+  data.forEach((item,i)=>{
+    const label=document.createElement('div');
+    label.className='row-label';
+    label.textContent=i+1;
+    if(rowsState[i].revealed){
+      label.style.pointerEvents = 'none'; // không click được
+      label.style.opacity = '0.5';         // mờ đi
+    }
+    label.onclick=()=>openQuestion(i);
+    const wrapper=document.createElement('div');
+    wrapper.className='row-wrapper';
+    wrapper.style.setProperty('--indent',offsets[i]??0);
+    const row=document.createElement('div');
+    row.className='row';
+    row.dataset.index=i;
+    for(let c=0;c<item.answer.length;c++){
+      const cell=document.createElement('div');
+      cell.className='cell';
+      cell.onclick=()=>{if(rowsState[i].selected&&!rowsState[i].revealed)revealAnswer(i);}
+      row.appendChild(cell);
+    }
+    wrapper.appendChild(row);
+    const btn=document.createElement('button');
+    btn.className='reset-btn';
+    btn.textContent='Reset';
+    btn.onclick=()=>resetRow(i);
+    if(rowsState[i].revealed){
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+    board.append(label,wrapper,btn);
+  });
+}
+function openQuestion(i){
+  currentIndex=i;
+  questionText.textContent=`Question ${i+1}: ${data[i].question}`;
+  const lengthEl = document.getElementById('answer-length');
+  lengthEl.textContent = `Total characters: ${data[i].answer.length}`;
+  backBtn.classList.add('hidden');
+  showQuestionScreen(true);
+  startTimer();
+  playSound('sound-start');
+}
+function showQuestionScreen(v){
+  questionScreen.classList.toggle('visible',v);
+  mainScreen.style.display=v?'none':'';
+}
+function startTimer(){
+  stopTimer();
+  let t=DURATION;
+  timerEl.textContent=t;
+  timerId=setInterval(()=>{t--;timerEl.textContent=t;
+    if(t<=0){stopTimer();
+      timerEl.textContent='Time’s up!';
+      backBtn.classList.remove('hidden');
+    }
+  },1000);
+}
+function stopTimer(){
+  if(timerId){
+    clearInterval(timerId);timerId=null;
+  }
+}
+backBtn.onclick=()=>{
+    rowsState[currentIndex].selected=true;
+    markRowBlue(currentIndex);
+    showQuestionScreen(false);
+    const audio=document.getElementById("sound-start");
+    if(audio){
+      audio.pause();audio.currentTime=0;
+    }
+  }
+function markRowBlue(i){getRow(i).querySelectorAll('.cell').forEach(c=>c.classList.add('blue'));}
+function revealAnswer(i){
+  const row=getRow(i);
+  const chars=data[i].answer.split('');
+  row.querySelectorAll('.cell').forEach((cell,idx)=>{
+    cell.classList.remove('blue');
+    cell.classList.add('revealed');
+    cell.textContent=chars[idx];
+    if(idx===highlightPositions[i])cell.classList.add('highlight');
+  });
+  rowsState[i].revealed=true;
+  const label = board.querySelectorAll('.row-label')[i];
+  label.style.pointerEvents = 'none';
+  label.style.opacity = '0.5';
+  const resetBtn = board.querySelectorAll('.reset-btn')[i];
+  resetBtn.disabled = true;
+  resetBtn.style.opacity = '0.5';
+  checkAllRevealed();
+  playSound('sound-horizontal-answer');
+}
+function resetRow(i){
+  rowsState[i]={selected:false,revealed:false};
+  getRow(i).querySelectorAll('.cell').forEach(cell=>{cell.textContent='';cell.className='cell';});
+  verticalAnswerEl.style.display='none';
+  showVerticalBtn.style.display='none';
+  const label = board.querySelectorAll('.row-label')[i];
+  label.style.pointerEvents = 'auto';
+  label.style.opacity = '1';
+
+  // Bật lại nút reset
+  const resetBtn = board.querySelectorAll('.reset-btn')[i];
+  resetBtn.disabled = false;
+  resetBtn.style.opacity = '1';
+}
+function getRow(i){
+  return board.querySelector(`.row[data-index="${i}"]`);
+}
+function checkAllRevealed(){
+  if(rowsState.every(r=>r.revealed)){
+    showVerticalBtn.style.display='inline-block';
+  }
+}
+showVerticalBtn.onclick = () => {
+  const verticalAnswerFixed = "JERSEYCITY";
+  const grid = document.getElementById('vertical-grid');
+  grid.innerHTML = ""; // xoá cũ nếu bấm lần nữa
+
+  verticalAnswerFixed.split('').forEach(char => {
+    const cell = document.createElement('div');
+    cell.className = "vertical-cell";
+    cell.textContent = char;
+    grid.appendChild(cell);
+  });
+
+  grid.style.display = 'flex';
+  playSound('sound-vertical-answer');
+};
+buildBoard();
+</script>
+</body>
+</html>
