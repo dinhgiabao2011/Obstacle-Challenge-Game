@@ -117,17 +117,17 @@
   <source src="./audio3.wav" type="audio/mpeg">
 </audio>
 <script>
-const data=[
-  {question:"This action moves your code from development to production",answer:"DEPLOY"},
-  {question:"Where do we store data?",answer:"DATABASE"},
-  {question:"One way to prevent being hack",answer:"ENCRYPT"},
-  {question:"One office commonly used for onsite",answer:"SINGAPORE"},
-  {question:"What are Create, Edit, Filter, Search, Sort,....?",answer:"FUNCTION"},
-  {question:"What is 01010100?",answer:"BINARY"},
-  {question:"One tool that is commonly used by QA to test API",answer:"POSTMAN"},
-  {question:"To test an mobile app, what do you need to have?",answer:"PHONE"},
-  {question:"Where do developer code?",answer:"IDE"},
-  {question:"ESMS is a big ...... ?",answer:"PROJECT"},
+const data=[ 
+    {question:"Thủ đô của Việt Nam?",answer:"HANOI"}, 
+    {question:"Ngôn ngữ lập trình phổ biến?",answer:"JAVASCRIPT"}, 
+    {question:"Hành tinh thứ 3 từ Mặt Trời?",answer:"EARTH"}, 
+    {question:"Ngôn ngữ chính thức của Nhật?",answer:"JAPANESE"}, 
+    {question:"Trái cây màu vàng, vị chua?",answer:"LEMON"}, 
+    {question:"Hệ điều hành dành cho máy Mac của Apple?",answer:"MACOS"}, 
+    {question:"Ngôn ngữ đánh dấu cho web?",answer:"HTML"}, 
+    {question:"Mạng xã hội phổ biến?",answer:"FACEBOOK"}, 
+    {question:"Đơn vị tiền tệ Việt Nam?",answer:"DONG"}, 
+    {question:"Python thường dùng cho lĩnh vực gì (viết tắt)?",answer:"AI"} 
 ];
 const offsets=[2,4,0,0,5,1,1,0,2,1];
 const highlightPositions = [5, 2, 3, 8, 3, 5, 2, 4, 0, 3]; 
@@ -263,7 +263,7 @@ function checkAllRevealed(){
   }
 }
 showVerticalBtn.onclick = () => {
-  const verticalAnswerFixed = "JERSEYCITY";
+  const verticalAnswerFixed = "HEHEYOUWIN";
   const grid = document.getElementById('vertical-grid');
   grid.innerHTML = ""; // xoá cũ nếu bấm lần nữa
 
